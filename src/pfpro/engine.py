@@ -268,8 +268,9 @@ def stress_matrix(
 ) -> StressMatrix:
     """Stress-test matrix per docs/02-functional-spec.md §4.
 
-    Columns are loan-rate scenarios on the ``rates`` grid (the rate currently
-    in force at ``stress_year`` is inserted if not already on the grid);
+    Columns are loan-rate scenarios on the ``rates`` grid (the current rate —
+    the first bracket's rate, i.e. the rate the reference UI displays — is
+    inserted if not already on the grid);
     rows are fulfilment-ratio scenarios in ``ratios`` order. Each cell shifts
     the whole rate-bracket schedule by (column rate - current rate) — i.e.
     the rate change applies uniformly across all years — applies the row's
@@ -277,7 +278,7 @@ def stress_matrix(
     IRR.
     """
     base = _coerce_params(params)
-    current_rate = _bracket_rate(base.rate_brackets, stress_year)
+    current_rate = _bracket_fields(base.rate_brackets[0])[1]
     columns = sorted({float(r) for r in rates} | {current_rate})
     achievement_rows = [float(a) for a in ratios]
 
