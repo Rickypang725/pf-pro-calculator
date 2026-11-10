@@ -1,0 +1,73 @@
+{
+  "_comment": "Golden vectors reverse-verified against the reference tool's live UI on 2026-11-09. Base inputs below; every expected value reproduced independently to full precision. Display rounding in the reference tool: USD to integer, IRR to 2dp.",
+  "base_params": {
+    "total_premium": 120000,
+    "discount_percent": 5,
+    "surrender0_percent": 80,
+    "ltv_percent": 95,
+    "bank_fx": 7.75,
+    "fwd_fx": 7.85,
+    "rate_brackets": [{ "end_year": 0, "rate": 4.11 }],
+    "achievement_percent": 100
+  },
+  "benefit_table": [
+    { "year": 1,  "guaranteed": 75000,  "reversionary": 0,     "special": 0     },
+    { "year": 2,  "guaranteed": 77000,  "reversionary": 500,   "special": 1000  },
+    { "year": 3,  "guaranteed": 79000,  "reversionary": 1000,  "special": 2000  },
+    { "year": 4,  "guaranteed": 81000,  "reversionary": 2000,  "special": 4000  },
+    { "year": 5,  "guaranteed": 85000,  "reversionary": 5000,  "special": 10000 },
+    { "year": 6,  "guaranteed": 87000,  "reversionary": 6000,  "special": 12000 },
+    { "year": 7,  "guaranteed": 89000,  "reversionary": 7500,  "special": 15000 },
+    { "year": 8,  "guaranteed": 91000,  "reversionary": 9000,  "special": 18000 },
+    { "year": 9,  "guaranteed": 93000,  "reversionary": 10500, "special": 21000 },
+    { "year": 10, "guaranteed": 95000,  "reversionary": 12000, "special": 25000 },
+    { "year": 15, "guaranteed": 110000, "reversionary": 25000, "special": 50000 },
+    { "year": 20, "guaranteed": 130000, "reversionary": 45000, "special": 85000 },
+    { "year": 25, "guaranteed": 155000, "reversionary": 75000, "special": 135000 },
+    { "year": 30, "guaranteed": 185000, "reversionary": 115000,"special": 205000 }
+  ],
+  "expected": {
+    "loan_usd": 91200,
+    "loan_hkd": 706800,
+    "outlay_usd": -23961.783439490446,
+    "outlay_hkd": -188100,
+    "leverage": 5.007974481658692,
+    "annual_interest": 3748.32,
+    "year4":  { "surrender": 87000,  "gross": -4200, "net": -43155.06343949045, "irr": null },
+    "year5":  { "surrender": 100000, "gross": 8800,  "net": -33903.38343949045, "irr": -0.4631813788226172 },
+    "year7":  { "surrender": 111500, "gross": 20300, "net": -29900.02343949045, "irr": -0.1945405997244534 },
+    "year8":  { "surrender": 118000, "gross": 26800, "net": -27148.34343949045, "irr": -0.13326735381261937 },
+    "year9":  { "surrender": 124500, "gross": 33300, "net": -24396.66343949045, "irr": -0.09416470816704818 },
+    "year10": { "surrender": 132000, "gross": 40800, "net": -20644.98343949045, "irr": -0.06362936150622094 },
+    "year20": { "surrender": 260000, "gross": 168800,"net": 69871.81656050953,  "irr": 0.04212403598003785 }
+  },
+  "stress_matrix_cells": [
+    { "rate": 2.00, "achievement": 100, "stress_year": 20, "irr_percent": 7.05 },
+    { "rate": 3.25, "achievement": 80,  "stress_year": 20, "irr_percent": 4.10 },
+    { "rate": 4.11, "achievement": 100, "stress_year": 20, "irr_percent": 4.21 },
+    { "rate": 4.11, "achievement": 60,  "stress_year": 20, "irr_percent": 1.35 },
+    { "rate": 3.50, "achievement": 95,  "stress_year": 20, "irr_percent": 4.70 },
+    { "rate": 5.00, "achievement": 65,  "stress_year": 20, "irr_percent": 0.58 }
+  ],
+  "rate_columns": [2.00, 2.25, 2.5, 2.75, 3.00, 3.25, 3.5, 3.75, 4.00, 4.25, 4.5, 4.75, 5.00],
+  "achievement_rows": [100, 95, 90, 85, 80, 75, 70, 65, 60],
+  "effective_rate_cases": [
+    { "hibor_1m": 2.59268, "h_spread": 1.5,  "prime_rate": 5.25,  "p_spread": 0.65, "expected": 4.09268 },
+    { "hibor_1m": 4.50000, "h_spread": 1.5,  "prime_rate": 5.25,  "p_spread": 0.65, "expected": 4.60 },
+    { "hibor_1m": 2.59268, "h_spread": 1.2,  "prime_rate": 5.375, "p_spread": 1.875,"expected": 3.50 },
+    { "hibor_1m": 3.95000, "h_spread": 0.65, "prime_rate": 5.25,  "p_spread": 0.65, "expected": 4.60 }
+  ],
+  "bracket_lookup_cases": [
+    {
+      "brackets": [{ "end_year": 5, "rate": 4.11 }, { "end_year": 10, "rate": 4.60 }, { "end_year": 0, "rate": 5.00 }],
+      "cases": [
+        { "year": 1,  "expected_rate": 4.11 },
+        { "year": 5,  "expected_rate": 4.11 },
+        { "year": 6,  "expected_rate": 4.60 },
+        { "year": 10, "expected_rate": 4.60 },
+        { "year": 11, "expected_rate": 5.00 },
+        { "year": 30, "expected_rate": 5.00 }
+      ]
+    }
+  ]
+}
