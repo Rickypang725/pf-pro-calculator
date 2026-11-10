@@ -144,6 +144,7 @@ class Row:
 
 
 def _bracket_fields(bracket: Any) -> tuple[int, float]:
+    """Extract ``(end_year, rate)`` from a mapping or :class:`RateBracket`."""
     if isinstance(bracket, Mapping):
         return int(bracket["end_year"]), float(bracket["rate"])
     return int(bracket.end_year), float(bracket.rate)
