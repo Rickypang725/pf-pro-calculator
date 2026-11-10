@@ -125,3 +125,72 @@ class StressResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str
+
+
+# --------------------------------------------------------------------- app
+
+from fastapi import FastAPI  # noqa: E402  (kept below schema defs for readability)
+
+from pfpro import engine
+
+
+def _to_params(req: ProjectionRequest) -> engine.ProjectionParams:
+    """Map the API request onto the engine's pure input dataclass."""
+    return engine.ProjectionParams(
+        total_premium=req.total_premium,
+        discount_percent=req.discount_percent,
+        surrender0_percent=req.surrender0_percent,
+        ltv_percent=req.ltv_percent,
+        bank_fx=req.bank_fx,
+        fwd_fx=req.fwd_fx,
+        rate_brackets=tuple(
+            engine.RateBracket(end_year=b.end_year, rate=b.rate)
+            for b in req.rate_brackets
+        ),
+        achievement_percent=req.achievement_percent,
+    )
+
+
+def _to_table(req: ProjectionRequest) -> list[dict[str, float | int]]:
+    return [entry.model_dump() for entry in req.table]
+
+
+def create_app() -> FastAPI:
+    """Build the FastAPI application exposing the engine over HTTP."""
+    application = FastAPI(
+        title="pfpro",
+        version="0.1.0",
+        description="Premium-financing calculator API (clean-room rebuild). "
+                    "Illustrative figures only; see the disclaimer field on "
+                    "every response.",
+    )
+
+    @application.get("/healthz", response_model=HealthResponse)
+    def healthz() -> HealthResponse:
+        return HealthResponse(status="ok")
+
+    @application.post("/projection", response_model=ProjectionResponse)
+    def projection(req: ProjectionRequest) -> ProjectionResponse:
+        rows = engine.project(_to_params(req), _to_table(req))
+        return ProjectionResponse(rows=rows, disclaimer=DISCLAIMER)
+
+    @application.post("/stress", response_model=StressResponse)
+    def stress(req: StressRequest) -> StressResponse:
+        matrix = engine.stress_matrix(
+            _to_params(req),
+            _to_table(req),
+            req.rates,
+            req.ratios,
+            req.stress_year,
+        )
+        return StressResponse(
+            rate_columns=matrix.rate_columns,
+            achievement_rows=matrix.achievement_rows,
+            rows=matrix.rows,
+            disclaimer=DISCLAIMER,
+        )
+
+    return application
+
+
+app = create_app()
