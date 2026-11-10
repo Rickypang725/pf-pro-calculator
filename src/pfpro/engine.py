@@ -222,3 +222,95 @@ def project(
             cashflows=cashflows,
         ))
     return rows
+
+
+@dataclass(frozen=True)
+class Cell:
+    """One stress-matrix cell: IRR at ``stress_year`` for a scenario."""
+
+    rate: float  # loan-rate column (%); the whole bracket schedule is shifted to this
+    achievement: float  # fulfilment-ratio row (%)
+    irr: float | None
+
+
+@dataclass(frozen=True)
+class StressMatrix:
+    """Stress-test matrix over loan-rate columns x achievement rows."""
+
+    rate_columns: list[float]  # sorted; the current rate is inserted if off-grid
+    achievement_rows: list[float]  # in the order supplied by the caller
+    rows: list[list[Cell]]  # rows[i][j] = cell for achievement_rows[i], rate_columns[j]
+
+
+def _coerce_params(params: Any) -> ProjectionParams:
+    """Build :class:`ProjectionParams` from any duck-typed params object."""
+    if isinstance(params, ProjectionParams):
+        return params
+    return ProjectionParams(
+        total_premium=float(params.total_premium),
+        discount_percent=float(params.discount_percent),
+        surrender0_percent=float(params.surrender0_percent),
+        ltv_percent=float(params.ltv_percent),
+        bank_fx=float(params.bank_fx),
+        fwd_fx=float(params.fwd_fx),
+        rate_brackets=params.rate_brackets,
+        achievement_percent=float(params.achievement_percent),
+    )
+
+
+def stress_matrix(
+    params: Any,
+    table: Sequence[Mapping[str, Any]],
+    rates: Sequence[float],
+    ratios: Sequence[float],
+    stress_year: int,
+) -> StressMatrix:
+    """Stress-test matrix per docs/02-functional-spec.md §4.
+
+    Columns are loan-rate scenarios on the ``rates`` grid (the rate currently
+    in force at ``stress_year`` is inserted if not already on the grid);
+    rows are fulfilment-ratio scenarios in ``ratios`` order. Each cell shifts
+    the whole rate-bracket schedule by (column rate - current rate) — i.e.
+    the rate change applies uniformly across all years — applies the row's
+    achievement ratio, reruns :func:`project`, and keeps the ``stress_year``
+    IRR.
+    """
+    base = _coerce_params(params)
+    current_rate = _bracket_rate(base.rate_brackets, stress_year)
+    columns = sorted({float(r) for r in rates} | {current_rate})
+    achievement_rows = [float(a) for a in ratios]
+
+    base_brackets = [_bracket_fields(b) for b in base.rate_brackets]
+    rows: list[list[Cell]] = []
+    for achievement in achievement_rows:
+        cells: list[Cell] = []
+        for column_rate in columns:
+            shift = column_rate - current_rate
+            shifted_brackets = tuple(
+                RateBracket(end_year=end_year, rate=rate + shift)
+                for end_year, rate in base_brackets
+            )
+            scenario = ProjectionParams(
+                total_premium=base.total_premium,
+                discount_percent=base.discount_percent,
+                surrender0_percent=base.surrender0_percent,
+                ltv_percent=base.ltv_percent,
+                bank_fx=base.bank_fx,
+                fwd_fx=base.fwd_fx,
+                rate_brackets=shifted_brackets,
+                achievement_percent=achievement,
+            )
+            projected = {
+                row.year: row.irr for row in project(scenario, table)
+            }
+            cells.append(Cell(
+                rate=column_rate,
+                achievement=achievement,
+                irr=projected.get(stress_year),
+            ))
+        rows.append(cells)
+    return StressMatrix(
+        rate_columns=columns,
+        achievement_rows=achievement_rows,
+        rows=rows,
+    )
