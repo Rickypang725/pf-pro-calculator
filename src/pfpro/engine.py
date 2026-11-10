@@ -94,6 +94,21 @@ class RateBracket:
     rate: float
 
 
+def effective_rate(
+    hibor_1m: float,
+    h_spread: float,
+    prime_rate: float,
+    p_spread: float,
+) -> float:
+    """Adopted loan rate under H/P dual-track pricing (spec §3).
+
+    H-plan rate = HIBOR(1M) + ``h_spread``; P-plan rate = ``prime_rate``
+    minus ``p_spread``; the bank charges ``min(H, P)``. When only the P plan
+    is offered the minimum reduces to the P rate directly.
+    """
+    return min(hibor_1m + h_spread, prime_rate - p_spread)
+
+
 @dataclass(frozen=True)
 class ProjectionParams:
     """Inputs for a premium-financing projection.
