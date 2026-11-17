@@ -1,10 +1,12 @@
+# ⚠️ DEPRECATED — rebuilt contract-first, see premium-financing-calculator
+
 # PF-Pro Rebuild — Kimi Code 任務封包
 
 ## 這個 repo 是什麼
 
 這是**交給 Kimi Code（或其他 AI coding agent）自主執行的任務封包**，目標是從零重建一個「保費融資計算器」（Premium Financing Calculator）：
 
-- 行為規格來源：對一個實際運作中的同類工具（Beezy PF-Pro Advisor）的逆向分析，其計算結果已逐項驗證（見 `docs/02-functional-spec.md` 與 `tests/vectors.json`）。
+- 行為規格來源：對一個實際運作中的同類工具（PF-Pro Advisor）的逆向分析，其計算結果已逐項驗證（見 `docs/02-functional-spec.md` 與 `tests/vectors.json`）。
 - `tests/test_engine.py` 是**完成與否的客觀合約**：agent 的任務是實作 `src/pfpro/engine.py`，直到 `pytest` 全綠。
 - 重建版必須是**原創程式碼**，做為個人 cloud portfolio 專案，最終部署上 GCP Cloud Run（Terraform 管理）。
 
